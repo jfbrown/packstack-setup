@@ -1,4 +1,8 @@
+Source the keystonerc_admin script, and create your new networks. Make sure
+you've deleted ALL the existing demo network components.
+
 ```
+~ $ . keystonerc_admin
 (neutron) net-create ext-net --router:external True
 Created a new network:
 +---------------------------+--------------------------------------+
@@ -123,3 +127,10 @@ Created a new security_group_rule:
 | tenant_id         | 101f02fdb8604114bfa299d71c7a2ea7     |
 +-------------------+--------------------------------------+
 ```
+
+Finally, make sure that you can reach the tenant router gateway:
+
+```
+ping -c 4 192.168.1.200
+```
+

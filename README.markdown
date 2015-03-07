@@ -29,6 +29,17 @@ packstack for an all-in-one system.
 ```
 [root@juno-allinone ~]# systemctl disable NetworkManager
 [root@juno-allinone ~]# systemctl stop NetworkManager
+```
+
+You should also set the `DEVICE` property in the
+`/etc/sysconfig/network-scripts/ifcfg-*` files, setting it to the correct name
+for each adapter (in my case, `eno1`, `enp3s0`). Once you've done that, take
+down all adapters over which you're not connected, and then start the network
+daemon.
+
+```
+[root@juno-allinone ~]# ifdown enp3s0
+[root@juno-allinone ~]# ifdown eno1 && systemctl start network
 [root@juno-allinone ~]# yum update -y
 [root@juno-allinone ~]# yum install -y https://rdo.fedorapeople.org/rdo-release.rpm
 [root@juno-allinone ~]# yum install -y openstack-packstack
@@ -39,7 +50,7 @@ You've then got to set up your interface mapping. Here, it doesn't really matter
 whether you use the same, or a different interface. You just need some interface
 to connect to `br-ex`.
 
-Here's eno1, just for sanity:
+Here's `eno1`, just for sanity:
 
 ```
 vim /etc/sysconfig/network-scripts/ifcfg-eno1
@@ -62,10 +73,11 @@ HWADDR="44:39:C4:3A:85:08"
 NM_CONTROLLED="no"
 ```
 
-And br-ex, which takes the properties from enp3s0:
+And `br-ex`, which takes the properties from enp3s0:
 
 ```
 vim /etc/sysconfig/network-scripts/ifcfg-br-ex
+
 DEVICE=br-ex
 DEVICETYPE=ovs
 TYPE=OVSBridge
@@ -76,7 +88,7 @@ DNS1=192.168.1.1
 ONBOOT=yes
 ```
 
-And finally enp3s0, which delegates its properties to br-ex:
+And finally `enp3s0`, which delegates its properties to br-ex:
 
 ```
 vim /etc/sysconfig/network-scripts/ifcfg-enp3s0
@@ -90,7 +102,7 @@ IPV6INIT="no"
 NM_CONTROLLED="no"
 ```
 
-Add the following to the /etc/neutron/plugin.ini file. I'm not sure why/if this
+Add the following to the `/etc/neutron/plugin.ini` file. I'm not sure why/if this
 is actually necessary, but Shane says to do it, and my setup works, so... The
 section you're editing is under the `[ml2_type_vlan]` heading.
 
