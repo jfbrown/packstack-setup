@@ -27,7 +27,7 @@ want, but I think the net-tools package (which provides `route` and `netstat`
 is a must.
 
 ```
-[stack@juno-allinone ~]$ sudo yum install -y vim net-tools
+[stack@juno-allinone ~]$ sudo yum install -y vim net-tools bind-utils htop
 ```
 
 Later, when you stop NetworkManager, if you're running static IPs on your
