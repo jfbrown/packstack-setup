@@ -1,5 +1,15 @@
 Source the keystonerc_admin script, and create your new networks. Make sure
-you've deleted ALL the existing demo network components.
+you've deleted ALL the existing demo network components. Verify by running:
+
+```
+router-list
+port-list
+subnet-list
+net-list
+```
+
+All should be empty. Now we can begin setting up our internal and external
+(public) networks and linking them together.
 
 ```
 ~ $ . keystonerc_admin
@@ -39,14 +49,14 @@ Created a new subnet:
 | network_id        | d7cf4ced-1d5c-4c57-a3cd-b022ac25dcee               |
 | tenant_id         | 101f02fdb8604114bfa299d71c7a2ea7                   |
 +-------------------+----------------------------------------------------+
-(neutron) net-create demo-net
+(neutron) net-create int-net
 Created a new network:
 +---------------------------+--------------------------------------+
 | Field                     | Value                                |
 +---------------------------+--------------------------------------+
 | admin_state_up            | True                                 |
 | id                        | fadde85a-3885-46d0-91ad-956301212033 |
-| name                      | demo-net                             |
+| name                      | int-net                             |
 | provider:network_type     | vxlan                                |
 | provider:physical_network |                                      |
 | provider:segmentation_id  | 11                                   |
@@ -56,7 +66,7 @@ Created a new network:
 | subnets                   |                                      |
 | tenant_id                 | 101f02fdb8604114bfa299d71c7a2ea7     |
 +---------------------------+--------------------------------------+
-(neutron) subnet-create demo-net --name demo-subnet --gateway 10.0.0.1 10.0.0.0/24
+(neutron) subnet-create int-net --name int-subnet --gateway 10.0.0.1 10.0.0.0/24
 Created a new subnet:
 +-------------------+--------------------------------------------+
 | Field             | Value                                      |
@@ -71,11 +81,11 @@ Created a new subnet:
 | ip_version        | 4                                          |
 | ipv6_address_mode |                                            |
 | ipv6_ra_mode      |                                            |
-| name              | demo-subnet                                |
+| name              | int-subnet                                 |
 | network_id        | fadde85a-3885-46d0-91ad-956301212033       |
 | tenant_id         | 101f02fdb8604114bfa299d71c7a2ea7           |
 +-------------------+--------------------------------------------+
-(neutron) router-create demo-router
+(neutron) router-create router1
 Created a new router:
 +-----------------------+--------------------------------------+
 | Field                 | Value                                |
@@ -85,14 +95,14 @@ Created a new router:
 | external_gateway_info |                                      |
 | ha                    | False                                |
 | id                    | 1e5cc7f8-9326-4236-b624-2801997400a0 |
-| name                  | demo-router                          |
+| name                  | router1                              |
 | routes                |                                      |
 | status                | ACTIVE                               |
 | tenant_id             | 101f02fdb8604114bfa299d71c7a2ea7     |
 +-----------------------+--------------------------------------+
-(neutron) router-interface-add demo-router demo-subnet
+(neutron) router-interface-add router1 int-subnet
 Added interface 1942999b-509c-43bc-bed4-f45792acf092 to router demo-router.
-(neutron) router-gateway-set demo-router ext-net
+(neutron) router-gateway-set router1 ext-net
 Set gateway for router demo-router
 (neutron) security-group-rule-create --protocol icmp --direction ingress default
 Created a new security_group_rule:

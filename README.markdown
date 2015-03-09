@@ -22,13 +22,34 @@ install, with 2 NICs. Both have static IPs; 192.168.1.90 on eno1 and
 
 # Preparation & Installation
 
-You need to stop NetworkManager, so it doesn't interfere with packstack. Then
-update the system, add the repo, install packstack, and install openstack via
-packstack for an all-in-one system.
+Install some basic tools to make life better while working. Use whatever you
+want, but I think the net-tools package (which provides `route` and `netstat`
+is a must.
+
+```
+[stack@juno-allinone ~]$ sudo yum install -y vim net-tools
+```
+
+Later, when you stop NetworkManager, if you're running static IPs on your
+interfaces, when you start up `network`, you'll lose your default
+gateway. To avoid
+that, set it in `/etc/sysconfig/network`.
+
+```
+sudo vim /etc/sysconfig/network
+
+GATEWAY="192.168.1.1"
+```
+
+You need to stop NetworkManager, so it doesn't interfere with packstack.
 
 ```
 [root@juno-allinone ~]# systemctl disable NetworkManager
 [root@juno-allinone ~]# systemctl stop NetworkManager
+```
+
+Update the system, add the repo, install packstack, and install openstack via
+packstack for an all-in-one system.
 ```
 
 You should also set the `DEVICE` property in the
@@ -38,6 +59,8 @@ down all adapters over which you're not connected, and then start the network
 daemon.
 
 ```
+[stack@kermit ~]$ sudo vim /etc/sysconfig/network-scripts/ifcfg-eno1
+[stack@kermit ~]$ sudo vim /etc/sysconfig/network-scripts/ifcfg-enp3s0
 [root@juno-allinone ~]# ifdown enp3s0
 [root@juno-allinone ~]# ifdown eno1 && systemctl start network
 [root@juno-allinone ~]# yum update -y
@@ -47,8 +70,10 @@ daemon.
 ```
 
 You've then got to set up your interface mapping. Here, it doesn't really matter
-whether you use the same, or a different interface. You just need some interface
-to connect to `br-ex`.
+whether you use the same, or a different interface as the one you're logged in
+from. You just need some interface
+to connect to `br-ex`. I'm using my `enp3s0` interface, to leave the `eno1` as
+the default admin interface to the physical server.
 
 Here's `eno1`, just for sanity:
 
@@ -120,6 +145,21 @@ if everything was set up correctly.
 [root@juno-allinone ~]# service network restart
 ```
 
+Finally, for some reason the packstack installation defaults to `kvm`
+virtualization, but we want to run `qemu`. Edit `/etc/nova/nova.conf` to
+make the change, and the restart nova.
+
+```
+vim /etc/nova/nova.conf
+
+[libvirt]
+...
+virt_type=qemu
+```
+
+```
+su
+
 Now go following the instructions in `neutron.readme` to set up the open vswitch
 networking components.
 
@@ -129,8 +169,17 @@ And, finally, create some fun ingress rules in the default security group so tha
 we can actually contact new instances.
 
 ```
-[root@juno-allinone ~(keystone_admin)]# neutron security-group-rule-create \
+[stack@juno-allinone ~(keystone_admin)]$ neutron security-group-rule-create \
   --protocol icmp --direction ingress default
 [root@juno-allinone ~(keystone_admin)]# neutron security-group-rule-create \
   --protocol tcp --port-range-min 22 --port-range-max 22 --direction ingress default
 ```
+
+You should now be able to resume the official guides at
+https://openstack.redhat.com/Quickstart.
+You can add Ubuntu to openstack by following the same technique as with Fedora,
+but use the images found here:
+https://cloud-images.ubuntu.com/.
+You're looking for the `*-disk1.img` files. I've found them irritatingly
+slow to boot, but they seem to be okay once they come up.
+
